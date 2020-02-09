@@ -45,10 +45,10 @@ def adjust_gamma(image, gamma=1.0):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('EDR-OpenCV')
+    parser = argparse.ArgumentParser('EDR Video')
     parser.add_argument('-s', '--source', required=True, type=arg2source)
     parser.add_argument('-w', '--width', type=int, default=640)
-    parser.add_argument('-g', '--gamma', type=arg2gamma, default='1.3,3')
+    parser.add_argument('-g', '--gamma', type=arg2gamma, default='1.5,3')
     args = parser.parse_args()
     print(args)
 
