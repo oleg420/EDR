@@ -37,8 +37,7 @@ def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 
 def adjust_gamma(image, gamma=1.0):
-    inv_gamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** inv_gamma) * 255
+    table = np.array([((i / 255.0) ** gamma) * 255
                       for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(image, table)
 
@@ -46,15 +45,19 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('EDR Image')
     parser.add_argument('-i', '--image', required=True, type=arg2source)
     parser.add_argument('-w', '--width', type=int, default=640)
-    parser.add_argument('-g', '--gamma', type=arg2gamma, default='1.5,3')
+    parser.add_argument('-g', '--gamma', type=arg2gamma, default='0.4, 0.67')
     args = parser.parse_args()
     print(args)
 
     frame = cv2.imread(args.image)
+    frame = image_resize(frame, width=args.width)
 
     images = [frame.copy()]
     for g in args.gamma:
-        images.append(adjust_gamma(frame.copy(), g))
+        tmp_img = adjust_gamma(frame.copy(), g)
+        tmp_img = cv2.blur(tmp_img, (3, 3))
+
+        images.append(tmp_img)
 
     merge_mertens = cv2.createMergeMertens()
     edr_raw = merge_mertens.process(images)
@@ -62,8 +65,8 @@ if __name__ == '__main__':
     edr_raw = np.clip(edr_raw * 255, 0, 255)
     edr = edr_raw.astype('uint8')
 
-    cv2.imshow('LDR', image_resize(frame, 1280))
-    cv2.imshow('EDR', image_resize(edr, 1280))
+    cv2.imshow('LDR', frame)
+    cv2.imshow('EDR', edr)
 
     cv2.waitKey()
     cv2.destroyAllWindows()

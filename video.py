@@ -3,6 +3,8 @@ import argparse
 import numpy as np
 import cv2
 
+import torch
+
 
 def arg2source(arg):
     if type(arg) is int:
@@ -38,8 +40,7 @@ def image_resize(image, width=None, height=None, inter=cv2.INTER_AREA):
 
 
 def adjust_gamma(image, gamma=1.0):
-    inv_gamma = 1.0 / gamma
-    table = np.array([((i / 255.0) ** inv_gamma) * 255
+    table = np.array([((i / 255.0) ** gamma) * 255
                       for i in np.arange(0, 256)]).astype("uint8")
     return cv2.LUT(image, table)
 
@@ -48,7 +49,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser('EDR Video')
     parser.add_argument('-s', '--source', required=True, type=arg2source)
     parser.add_argument('-w', '--width', type=int, default=640)
-    parser.add_argument('-g', '--gamma', type=arg2gamma, default='1.5,3')
+    parser.add_argument('-g', '--gamma', type=arg2gamma, default='0.4, 0.67')
     args = parser.parse_args()
     print(args)
 
@@ -62,7 +63,10 @@ if __name__ == '__main__':
 
         images = [frame.copy()]
         for g in args.gamma:
-            images.append(adjust_gamma(frame.copy(), g))
+            tmp_img = adjust_gamma(frame.copy(), g)
+            tmp_img = cv2.blur(tmp_img, (3, 3))
+
+            images.append(tmp_img)
 
         merge_mertens = cv2.createMergeMertens()
         edr_raw = merge_mertens.process(images)
